@@ -1,6 +1,6 @@
 import express from 'express'
 import {PORT, mongodburl} from './config.js'
-import { MongoClient, ServerApiVersion } from "mongodb";
+import { MongoClient, ObjectId, ServerApiVersion } from "mongodb";
 
 const app = express()
 
@@ -26,15 +26,34 @@ app.get('/', (req, res) => {
 })
 
 app.get('/shop', (req, res) => {
-    return res.status(200).send('<a href="/">Home</a>');
+    myBooks.find().toArray()
+    .then(response=>{
+    return res.status(200).send(response);
+    })
+    .catch(err=>console.log(err))
+
+    // Route will show all books
+    // return res.status(200).send('<a href="/">Home</a>');
 })
 
 app.get('/shop/:id', (req, res) => {
+    // Show specific book
     const data = req.params
-    return res.status(200).send('<a href="/">Book: ${data.id}</a>')
+
+    const filter = {
+        "_id" : new ObjectId(data.id)
+    }
+    
+    myBooks.findOne(filter)
+    .then(response=>{
+    return res.status(200).send(response);
+    })
+    .catch(err=>console.log(err))
+
 })
 
-app.post('/savebook', (req, res) => {
+app.post('/admin/savebook', (req, res) => {
+    // Add a new book
     const data = req.body
     if (!data.title)
         return res.status(400).send("No title found")
@@ -50,4 +69,38 @@ app.post('/savebook', (req, res) => {
         }
     })
     return res.status(201).send(JSON.stringify(data))
+})
+
+app.delete('/admin/remove/:id', (req,res)=>{
+    const data = req.params
+    const filter = {
+    "_id" : new ObjectId(data.id)
+    }
+
+    myBooks.deleteOne(filter)
+    .then(response=>{
+    return res.status(200).send(response);
+    })
+    .catch(err=>console.log(err))
+})
+
+app.put('/admin/update/:id', (req, res)=>{
+    const data = req.params
+    const docData = req.body
+
+    const filter = {
+        "_id": new ObjectId(data.id)
+    }
+
+    const updDoc = {
+        $set: {
+            ...docData //.data.price, Docdata.cover
+        }
+    }
+
+    myBooks.updateOne(filter, updDoc)
+    .then(response=>{
+        return res.status(200).send(response)
+    })
+    .catch(err=>console.log(err))
 })
