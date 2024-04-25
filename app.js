@@ -1,9 +1,10 @@
 import express from 'express'
+import cors from 'cors'
 import {PORT, mongodburl} from './config.js'
 import { MongoClient, ObjectId, ServerApiVersion } from "mongodb";
 
 const app = express()
-
+app.use(cors())
 app.use(express.json())
 
 const client = new MongoClient(mongodburl,  {
